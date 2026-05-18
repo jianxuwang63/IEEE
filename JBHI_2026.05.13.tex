@@ -100,11 +100,8 @@ Effective clinical deployment of AI requires models that know when to abstain—
 Conformal risk control (CRC) \cite{angelopoulos2022conformal} offers a complementary, post-hoc framework that provides distribution-free guarantees on user-defined risk metrics. CRC has been applied in medical imaging to enable reliable human-in-the-loop workflows \cite{dvijotham2023enhancing, dai2017tumor}. In this work, we integrate SelectiveNet with CRC to create a dual-safeguard system: SelectiveNet learns to identify ambiguous inputs, while CRC calibrates the rejection threshold to meet predefined clinical safety bounds.
 
 \section{Methodology}\label{sec:methodology}
-\textcolor{blue}{I have marked the repeated contents in Chapter Three and Chapter Four in green, and specified which sentences are duplicated with each other.}\\
 
 We propose a framework designed to build a trustworthy diagnostic system for detecting the micropapillary (MIP) subtype of lung adenocarcinoma from local microscopy images. As shown in Figure~\ref{fig:framework}, our approach proceeds in three phases: (i) constructing a ViT-based multiple instance learning (MIL) baseline, where each pathology image is represented as a bag of local tiles; (ii) controlling false-negative risk using cost-sensitive training and Neyman–Pearson threshold calibration; and (iii) integrating selective classification to abstain on uncertain inputs and defer them to pathologists for review.
-
-
 
 \begin{figure*}[t]
   \centering
@@ -116,35 +113,38 @@ We propose a framework designed to build a trustworthy diagnostic system for det
 
 We frame MIP identification as a binary multiple instance learning (MIL) problem. A pathology image is partitioned into local tiles via a sliding window and represented as a bag \( X_i = \{\mathbf{x}_{i,1}, \dots, \mathbf{x}_{i,n_i}\} \), where the bag size \( n_i \) may vary across images. Each image is assigned an image-level label \( y_i \in \{0,1\} \), with \( y_i = 1 \) indicating MIP presence and \( y_i = 0 \) its absence. The objective is to learn a bag-level classifier \( f(X) \) that predicts the probability \( \hat{p} = \mathbb{P}(y = 1 \mid X) \), while explicitly constraining the false negative rate (FNR) for the high-risk positive class.
 
-\subsection{The Backbone: ViT-based MIL with Gated Attention Pooling}
-\label{sec:baseline_method}
+\subsection{The Backbone: ViT-based MIL with Gated Attention Pooling} \label{sec:baseline_method}
 
-We use a Vision Transformer (ViT) \cite{dosovitskiy2020image} as the instance encoder, followed by an attention-based pooling operator \cite{ilse2018attention} to aggregate instance features into a bag-level prediction. The following subsections present our model architecture and training protocol.
+We establish a multiple instance learning (MIL) framework in which a Vision Transformer (ViT)~\cite{dosovitskiy2020image} serves as the instance encoder and gated attention pooling~\cite{ilse2018attention} aggregates instance-level 
+representations into a bag-level prediction. This backbone constitutes the foundation upon which our subsequent contributions are built.
 
-\subsubsection{Tile extraction}
+\subsubsection{Bag Construction}
 
-\textcolor{green}{Following standard practice in computational pathology MIL, each microscopy image is decomposed into a bag of overlapping local tiles using a sliding window \cite{campanella2019clinical,lu2021data}. We load images as RGB via OpenCV \cite{bradski2000opencv} and substitute loading failures with zero-valued placeholders. Each image is padded to a minimum size of $512\times512$ using reflection padding, and we extract tiles of size 512 with a stride of 256. To preserve peripheral tissue, the final tile is aligned with the image boundary whenever the regular stride would otherwise leave uncovered margins.}\\
-\textcolor{magenta}{This part is repeated with the green-marked text on Line 312.}
+Each whole-slide image is decomposed into a bag of local tiles via a sliding window with overlap~\cite{campanella2019clinical,lu2021data}. Reflection 
+padding ensures images below a minimum resolution are handled gracefully, and boundary-aligned tiling preserves peripheral tissue that would otherwise be truncated by a regular stride.
 
-\subsubsection{Feature encoding}
-
-We adopt a ViT-Base encoder pre-trained using the Phikon framework \cite{filiot2023scaling}. \textcolor{green}{The backbone consists of 12 transformer layers with hidden dimension \( d = 768 \) and 12 attention heads (patch size 16, input resolution \(224\times224\)). We load the pre-trained weights via partial key-matching,}\textcolor{magenta}{This part is repeated with the green-marked text on Line 314.} and extract the \([CLS]\) token embedding from the final layer as the tile-level representation. Thus, for tile \(\mathbf{x}_k\), the instance feature is obtained as:
+\subsubsection{Instance Feature Extraction}
+Each tile $\mathbf{x}_k$ is encoded by a ViT pre-trained under the Phikon framework~\cite{filiot2023scaling}, with weights initialised via partial key-matching to accommodate architectural variants. The tile-level representation is obtained from the \(\texttt{[CLS]}\) token of the final 
+transformer layer:
 \begin{equation*}
-    \mathbf{h}_k = f_{\text{ViT}}(\mathbf{x}_k; \theta_{\text{enc}}), \quad \mathbf{h}_k \in \mathbb{R}^{768}.
+    \mathbf{h}_k = f_{\text{ViT}}(\mathbf{x}_k;\,\theta_{\text{enc}}),
+    \quad \mathbf{h}_k \in \mathbb{R}^{d_h},
 \end{equation*}
+where $d_h$ denotes the hidden dimension of the encoder.
 
-\subsubsection{Gated attention pooling and bag-level prediction}\label{S3-1-3}
-We aggregate tile features using a gated attention mechanism \cite{ilse2018attention}. For a bag of features \( H_i = \{\mathbf{h}_{i,j}\}_{j=1}^{n_i} \) from the \( i \)-th image, unnormalized attention scores \( s_{i,j} \) are computed as:
+\subsubsection{Gated Attention Aggregation and Bag-Level Prediction}
+\label{sec:gated_attention}
+Given the set of instance features $\mathcal{H}_i = \{\mathbf{h}_{i,j}\}_{j=1}^{n_i}$ for the $i$-th bag, unnormalized attention scores are computed via a gated mechanism that modulates a $\tanh$ branch with a sigmoid gate:
 \begin{equation*}
-    s_{i,j} = \mathbf{w}^\top \Bigl(\tanh(V\mathbf{h}_{i,j}) \odot \sigma(U\mathbf{h}_{i,j})\Bigr),
+    s_{i,j} = \mathbf{w}^{\top}
+    \!\left(\tanh\!\left(V\mathbf{h}_{i,j}\right) \odot
+    \sigma\!\left(U\mathbf{h}_{i,j}\right)\right),
 \end{equation*}
-where \( V, U \in \mathbb{R}^{256 \times 768} \) and \( \mathbf{w} \in \mathbb{R}^{256} \) are learnable parameters. These scores are normalized via softmax to produce attention weights \( a_{i,j} \). \textcolor{green}{In practice, bags are padded to the maximum size within a batch, and a boolean mask identifies valid tiles.}\textcolor{magenta}{This is identical to the second green-highlighted text in Line 312.}
-
-The bag-level representation is then given by:
+where $V,\,U \in \mathbb{R}^{d_a \times d_h}$ and $\mathbf{w} \in \mathbb{R}^{d_a}$ are learnable parameters, and $d_a$ is the attention dimension. Scores are normalized via softmax to yield attention weights $\{a_{i,j}\}$, and the bag-level representation is formed as their weighted sum:
 \begin{equation*}
-    \mathbf{z}_i = \sum_{j=1}^{n_i} a_{i,j} \mathbf{h}_{i,j} \in \mathbb{R}^{d}.
+    \mathbf{z}_i = \sum_{j=1}^{n_i} a_{i,j}\,\mathbf{h}_{i,j}.
 \end{equation*}
-Finally, a linear classifier \( h_{\mathrm{c}}: \mathbb{R}^{d} \to \mathbb{R} \) projects \( \mathbf{z}_i \) to a logit, which is passed through a sigmoid to yield the predicted probability \(\hat{p}_i = \sigma(h_{\mathrm{c}}(\mathbf{z}_i))\).
+A linear classifier then projects $\mathbf{z}_i$ to a scalar logit, and a sigmoid activation yields the predicted bag-level probability $\hat{p}_i = \sigma\!\left(h_{\mathrm{c}}(\mathbf{z}_i)\right)$. This formulation provides a fully differentiable, permutation-invariant aggregation scheme that assigns interpretable importance weights to individual tiles.
 
 \subsection{Phase I: Risk-Aware Training via Cost-Sensitive Learning}\label{sec:phase1_method}
 
@@ -219,7 +219,7 @@ Motivated by the risk-coverage trade-off formalized in Theorem \ref{Th2}, we imp
 \item \textbf{Auxiliary head} $h(\cdot)$: Trained on the standard classification objective to stabilize representation learning and regularize the overall model.
 \end{itemize}
 
-We formulate a differentiable objective to approximate the constraints in Theorem \ref{Th2}. The empirical selective risk $\hat{R}_n(f,g)$ is computed using cross-entropy loss $\ell$ \cite{geifman2019selectivenet}. To enforce a target coverage $c$, we introduce a quadratic penalty $\Psi(g) = \beta \max\big(0, c - \hat{\Phi}_n \big)^2$, where $\beta$ controls the constraint weight. Starting from the bag-level representation $\mathbf{z} \in \mathbb{R}^d$ introduced in Subsection \ref{S3-1-3}, the overall loss is defined as:
+We formulate a differentiable objective to approximate the constraints in Theorem \ref{Th2}. The empirical selective risk $\hat{R}_n(f,g)$ is computed using cross-entropy loss $\ell$ \cite{geifman2019selectivenet}. To enforce a target coverage $c$, we introduce a quadratic penalty $\Psi(g) = \beta \max\big(0, c - \hat{\Phi}_n \big)^2$, where $\beta$ controls the constraint weight. Starting from the bag-level representation $\mathbf{z} \in \mathbb{R}^d$ introduced in Subsection \ref{sec:gated_attention}, the overall loss is defined as:
 \begin{equation*}
     \mathcal{L} = \gamma \left(\hat{R}_n(f,g) + \Psi(g)\right) + (1-\gamma) \ell_{\mathrm{ce}}(h(\mathbf{z}_i), y_i),
 \end{equation*}
@@ -280,22 +280,18 @@ While Case 2 effectively controls the FNR, it may do so at the cost of unaccepta
 \section{Experiments and Results}\label{sec:experiments}
 
 In this section, we systematically evaluate the proposed framework through a cascade of eight complementary experiments. We first describe the experimental setup in Subsection \ref{S3-1} and then report the performance of our baseline model in Subsection \ref{S3-2}, followed by comparisons with competing state-of-the-art MIL architectures in Subsection \ref{S3-3}. To address the inherent limitations of architectural design alone, we progressively investigate three phases: risk-aware training via cost-sensitive learning in Subsection \ref{sec:phase1_results}, threshold selection via NP calibration in Subsection \ref{sec:phase2_results}, and the synergistic effect of cost-sensitive learning boosting NP calibration in Subsection \ref{S3-4}. We further extend to selective classification with conformal risk or FNR control in Subsection \ref{sec:phase3_results}, and conclude with external validation in Subsection \ref{S3-6}. Together, these subsections form a coherent progression from standard benchmarking to risk-controllable and reliable decision-making.
-\textcolor{blue}{I will mark the repeated content within Chapter Four in cyan. Please do not confuse it with green highlights, which indicate duplicated content between Chapter Three and Chapter Four.}
+
 \subsection{Experimental Setup}\label{S3-1}
 
-We implement our framework in PyTorch and run all experiments on an NVIDIA RTX 5090 GPU (32 GB). The dataset consists of 7,133 locally collected pathology images with image-level labels indicating MIP-present ($y = 1$) or MIP-absent ($y = 0$). Following common practice in computational pathology \cite{campanella2019clinical,lu2021data}, \textcolor{green}{we partition each image into overlapping $512 \times 512$ tiles using a sliding window of stride 256. Reflection padding is applied at boundaries to ensure full coverage.} Each tile is resized to $224 \times 224$ to preserve tissue-level context. \textcolor{green}{To handle variable bag sizes in mini-batches, we use zero-padding with an attention mask that excludes padded regions from gradient updates.} Input tiles are normalized using ImageNet statistics. During training, we apply strong data augmentation via Albumentations \cite{buslaev2020albumentations}, including random flips, moderate rotations, and color jitter.
+We implement our framework in PyTorch and conduct all experiments on an NVIDIA RTX 5090 GPU (32 GB). The dataset comprises 7,133 locally collected pathology images with image-level labels indicating the presence ($y=1$) or absence ($y=0$) of MIP. Following common practice in computational pathology \cite{campanella2019clinical,lu2021data}, we partition each image into overlapping $512 \times 512$ tiles using a stride of 256, applying reflection padding at boundaries to ensure full coverage. Each tile is resized to $224 \times 224$ to preserve tissue-level context. To handle variable bag sizes in mini-batches, we employ zero-padding with an attention mask that excludes padded regions from gradient updates. All tiles are normalized using ImageNet statistics. During training, we apply strong data augmentation via Albumentations \cite{buslaev2020albumentations}, including random flips, moderate rotations, and color jitter.
 
-\textcolor{green}{We initialize the ViT-based MIL baseline with Phikon weights \cite{filiot2023scaling} and employ gated attention pooling \cite{ilse2018attention}.} \textcolor{cyan}{Optimization uses AdamW \cite{loshchilov2017decoupled} with learning rate $1 \times 10^{-5}$ and weight decay $0.05$ for 15 epochs, following a cosine schedule with linear warmup. Training employs mixed precision \cite{micikevicius2017mixed} and gradient accumulation (effective batch size 32 over 4 steps). We use cross-entropy loss with label smoothing $0.1$ \cite{szegedy2016rethinking} and dropout $0.2$ in the classification head.}\textcolor{magenta}{This part is repeated with the cyan-marked text on Line 324.}
-
-\textcolor{cyan}{We adopt an image-level stratified 5-fold cross-validation.}\textcolor{magenta}{This part is repeated with the cyan-marked text on Line 324.} In addition to standard metrics (AUC and accuracy), we report ROC/PR curves and conduct calibration analysis using reliability diagrams and Brier scores \cite{guo2017calibration}. Unless stated otherwise, results are reported using the final training checkpoint with a default decision threshold $\tau = 0.5$.
-
-\textcolor{cyan}{To ensure stable and reproducible evaluation, we fix random seeds and enable deterministic cuDNN. The dataset is split into 80\% training and 20\% test using stratified sampling. All models are optimized with the same protocol: AdamW \cite{loshchilov2017decoupled} ($10^{-5}$, weight decay $0.05$) for 15 epochs, cosine schedule with 10\% linear warmup \cite{loshchilov2016sgdr}, mixed precision, and gradient accumulation (batch size 8, accumulation steps 4). Dropout $0.2$ and label smoothing $0.1$ are applied for regularization \cite{szegedy2016rethinking}. Each tile is normalized with ImageNet statistics \cite{russakovsky2015imagenet} and augmented via resizing to $224 \times 224$, random flips, rotation $\pm 15^\circ$, and color jitter. }
+We initialize the ViT based MIL baseline with Phikon weights \cite{filiot2023scaling} and adopt gated attention pooling \cite{ilse2018attention}. The dataset is split into 80\% training and 20\% test using stratified sampling. All models are optimized with the same protocol: AdamW \cite{loshchilov2017decoupled} (learning rate $10^{-5}$, weight decay $0.05$) for 15 epochs, a cosine schedule with 10\% linear warmup \cite{loshchilov2016sgdr}, mixed precision, and gradient accumulation (batch size 8, accumulation steps 4). Regularization includes dropout of 0.2 and label smoothing of 0.1 \cite{szegedy2016rethinking}. To ensure stable and reproducible evaluation, we fix random seeds and enable deterministic cuDNN. Unless stated otherwise, results are reported using the final training checkpoint with a default decision threshold of $\tau = 0.5$.
 
 \subsection{Baseline Model Performance}\label{S3-2}
 
 In clinical practice, pathologists often inspect specific high-magnification regions of interest (ROIs) to identify subtle histological growth patterns. These ROIs, however, typically exceed the input size constraints of standard neural networks. Consequently, we adopt the multiple instance learning (MIL) paradigm, which aggregates tile-level features into a whole-slide prediction without requiring pixel-level annotations.
 
-\textcolor{cyan}{We performed a stratified 5-fold cross-validation at the image level.} In each fold, the ViT‑MIL model was re‑initialized from the same Phikon checkpoint and trained for 15 epochs under identical optimization settings. Evaluation was conducted on the held‑out fold using the last‑epoch model with a fixed threshold $\tau = 0.5$. 
+We performed a stratified 5-fold cross-validation at the image level. In each fold, the ViT‑MIL model was re‑initialized from the same Phikon checkpoint and trained for 15 epochs under identical optimization settings. Evaluation was conducted on the held‑out fold using the last‑epoch model with a fixed threshold $\tau = 0.5$. 
 
 \begin{figure}[htbp]
     \centering
@@ -382,7 +378,7 @@ As shown in the table \ref{tab:sota_comparison}, the predictive performance of t
 
 \subsection{Phase I: Risk-Aware Training via Cost-Sensitive Learning}\label{sec:phase1_results}
 
-To mitigate the high false negative rate (FNR) observed in the baseline, we adopt Cost-Sensitive Learning (CSL) \cite{he2009learning,zadrozny2004learning}. For each positive-class weight $w_{1} \in \{5,10,15,20\}$, we train the same ViT-MIL architecture using a class-weighted cross-entropy loss, with the negative-class weight fixed at $w_{0}=1$. \textcolor{cyan}{All training settings—including optimizer (AdamW, $1\times10^{-5}$ learning rate, $0.05$ weight decay), scheduler (cosine annealing with 10\% warmup), mixed precision, gradient accumulation, and 15 epochs without early stopping—are kept same to the baseline.}\textcolor{magenta}{This experimental setup appears here for the third time.In line 314 and 324.} For evaluation, we maintain the same decision threshold $\tau = 0.5$. Figure~\ref{fig:main_diagram} illustrates the overall behavior across different cost scenarios.
+To mitigate the high false negative rate (FNR) observed in the baseline, we adopt Cost-Sensitive Learning (CSL) \cite{he2009learning,zadrozny2004learning}. For each positive-class weight $w_{1} \in \{5,10,15,20\}$, we train the same ViT-MIL architecture using a class-weighted cross-entropy loss, with the negative-class weight fixed at $w_{0}=1$. For evaluation, we maintain the same decision threshold $\tau = 0.5$. Figure~\ref{fig:main_diagram} illustrates the overall behavior across different cost scenarios.
 
 \begin{itemize}
     \item Confusion matrix (top row): Increasing $w_1$ makes the classifier progressively more sensitive to the positive class, generally lowering false negatives at the cost of higher false positives.
@@ -427,7 +423,6 @@ To empirically approximate the target risk levels \(\alpha \in \{0.01, 0.05, 0.1
 \hat{\tau}_{0.05}=\hat{p}_{(5)},\quad 
 \hat{\tau}_{0.10}=\hat{p}_{(10)}.
 \]
-\textcolor{magenta}{The introduction to NP here is somewhat redundant. Relevant explanations have already been elaborated in the methodology and this section, so such detailed descriptions are unnecessary.}
 Phase II introduces Neyman–Pearson (NP) thresholding to obtain formal, statistically grounded risk control \cite{rigollet2011neyman,tong2018neyman}. Empirically calibrated thresholds $\hat{\tau}$ are derived for three target risk levels: $10\%$, $5\%$, and $1\%$. The resulting score distributions and prediction performance are summarized in Figure~\ref{fig:np_summary} and Table~\ref{tab:table3}.
 
 \begin{figure}[htbp]
