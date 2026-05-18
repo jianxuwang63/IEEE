@@ -1,0 +1,168 @@
+% Graphical Abstract: Risk-Controlled Framework for MIP Classification
+% IEEE JBHI — 660 × 295 pixels (aspect ~2.24:1)
+% Compile with: pdflatex → convert to 660×295 px JPG/PNG at 300 dpi
+\documentclass[tikz, border=0pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, calc, fit}
+% \usepackage{fontspec}
+% \setmainfont{Arial}
+
+\begin{document}
+\begin{tikzpicture}[
+    % Layout dimensions
+    x=1cm, y=1cm,
+    % Box styles
+    box/.style={
+        rectangle, rounded corners=4pt, draw=#1, fill=#1!8,
+        minimum width=2.6cm, minimum height=1.3cm, align=center,
+        font=\small\sffamily, inner sep=4pt
+    },
+    box/.default=black,
+    phase1box/.style={box=orange, draw=orange!70!black, fill=orange!12, minimum width=3.0cm, minimum height=1.6cm},
+    phase2box/.style={box=cyan, draw=cyan!70!black, fill=cyan!12, minimum width=3.0cm, minimum height=1.6cm},
+    phase3box/.style={box=teal, draw=teal!70!black, fill=teal!12, minimum width=3.0cm, minimum height=1.6cm},
+    inputbox/.style={box=purple, draw=purple!60!black, fill=purple!8, minimum width=2.4cm, minimum height=1.2cm},
+    outputbox/.style={box=green, draw=green!50!black, fill=green!10, minimum width=2.4cm, minimum height=1.2cm},
+    % Arrow style
+    arrow/.style={-{Stealth[round]}, thick, draw=black!50},
+    dasharrow/.style={-{Stealth[round]}, thick, dashed, draw=black!40},
+    % Label style
+    metriclabel/.style={font=\footnotesize\sffamily, align=center},
+    phaselabel/.style={font=\small\sffamily\bfseries, align=center},
+    % Background
+    background/.style={rounded corners=8pt, fill=gray!3, draw=gray!20},
+]
+
+% ===== BACKGROUND PANELS =====
+\begin{scope}[on background layer]
+    \fill[gray!2] (-0.5, -2.5) rectangle (19.6, 4.8);
+\end{scope}
+
+% ===== ROW 1: MAIN PIPELINE =====
+
+% Input: Pathology Images
+\node[inputbox] (input) at (0, 2.5) {
+    \textbf{ROI Microscopy}\\[2pt]
+    \footnotesize 7,133 pathology images\\
+    \footnotesize MIP-present / MIP-absent
+};
+
+% Baseline ViT-MIL
+\node[box=blue, minimum width=2.8cm, minimum height=1.3cm] (baseline) at (4.0, 2.5) {
+    \textbf{ViT-MIL Baseline}\\[2pt]
+    \footnotesize Phikon encoder + Gated Attention\\
+    \footnotesize ACC 93.41\% \textbar{} \textcolor{red}{FNR 16.06\%}
+};
+
+% Phase I: CSL
+\node[phase1box] (phase1) at (7.8, 2.5) {
+    \textbf{Phase I: Cost-Sensitive}\\[2pt]
+    \footnotesize Reweight loss $w_1\!:\!w_0=10\!:\!1$\\
+    \footnotesize FNR $\downarrow$ to \textcolor{orange!70!black}{\textbf{3.62\%}}
+};
+
+% Phase II: NP
+\node[phase2box] (phase2) at (11.6, 2.5) {
+    \textbf{Phase II: NP Calibration}\\[2pt]
+    \footnotesize Order-statistic threshold $\hat{\tau}_{\alpha,\delta}$\\
+    \footnotesize $\mathbb{P}(\mathrm{FNR}>\alpha)\leq\delta$
+};
+
+% Phase III: SelectiveNet
+\node[phase3box] (phase3) at (15.4, 2.5) {
+    \textbf{Phase III: Selective}\\[2pt]
+    \footnotesize Coverage constraint $c=0.80$\\
+    \footnotesize Case 4 ($w_1=10$, FNR $\leq$5\%)
+};
+
+% Output
+\node[outputbox] (output) at (18.5, 2.5) {
+    \textbf{Clinical Diagnosis}\\[2pt]
+    \footnotesize FNR 5.07\%\\
+    \footnotesize Coverage 91.02\%
+};
+
+% Main arrows (pipeline)
+\draw[arrow] (input.east)  -- node[above, font=\tiny] {} (baseline.west);
+\draw[arrow] (baseline.east) -- (phase1.west);
+\draw[arrow] (phase1.east)   -- (phase2.west);
+\draw[arrow] (phase2.east)   -- (phase3.west);
+\draw[arrow] (phase3.east)   -- (output.west);
+
+% ===== ROW 2: PHASE DESCRIPTIONS =====
+
+% Phase I detail
+\node[phaselabel, orange!70!black] at (7.8, 1.2) {Reshape Decision Boundary};
+\node[metriclabel, text width=3.4cm] at (7.8, 0.5) {
+    \footnotesize Penalize missed MIP cases;\\
+    \footnotesize shift positive scores upward
+};
+
+% Phase II detail
+\node[phaselabel, cyan!70!black] at (11.6, 1.2) {Formal FNR Guarantee};
+\node[metriclabel, text width=3.4cm] at (11.6, 0.5) {
+    \footnotesize Distribution-free finite-sample\\
+    \footnotesize bound on false-negative risk
+};
+
+% Phase III detail
+\node[phaselabel, teal!70!black] at (15.4, 1.2) {Abstain \& Defer};
+\node[metriclabel, text width=3.8cm] at (15.4, 0.5) {
+    \footnotesize Accept confident; defer uncertain\\
+    \footnotesize to pathologists for review
+};
+
+% Vertical connectors from phases to descriptions
+\draw[dasharrow, orange!40] (phase1.south) -- (7.8, 1.45);
+\draw[dasharrow, cyan!40]  (phase2.south) -- (11.6, 1.45);
+\draw[dasharrow, teal!40]  (phase3.south) -- (15.4, 1.45);
+
+% ===== ROW 3: BOTTOM METRICS BAR =====
+\begin{scope}[on background layer]
+    \fill[black!2, rounded corners=6pt] (2.0, -1.8) rectangle (17.5, -0.8);
+\end{scope}
+
+\node[metriclabel] at (4.0, -1.3) {
+    \footnotesize \textcolor{red}{FNR 16.06\%}\\[0pt]
+    \footnotesize \textbf{Unsafe}
+};
+
+\node[metriclabel] at (7.8, -1.3) {
+    \footnotesize \textcolor{orange!70!black}{FNR 3.62\%}\\[0pt]
+    \footnotesize \textbf{Heuristic}
+};
+
+\node[metriclabel] at (11.6, -1.3) {
+    \footnotesize \textcolor{cyan!70!black}{FNR $\leq\alpha$}\\[0pt]
+    \footnotesize \textbf{Guaranteed}
+};
+
+\node[metriclabel] at (15.4, -1.3) {
+    \footnotesize \textcolor{teal!70!black}{FNR 5.07\%}\\[0pt]
+    \footnotesize \textbf{Coverage 91.02\%}
+};
+
+% Dotted connectors from phase boxes to bottom metrics
+\draw[dasharrow, black!25, thin] (baseline.south) -- (4.0, -0.65);
+\draw[dasharrow, black!25, thin] (phase1.south)   -- (7.8, -0.65);
+\draw[dasharrow, black!25, thin] (phase2.south)   -- (11.6, -0.65);
+\draw[dasharrow, black!25, thin] (phase3.south)   -- (15.4, -0.65);
+
+% ===== ANNOTATIONS =====
+
+% Phase labels above
+\node[font=\scriptsize\sffamily\bfseries, gray] at (4.0, 3.5)  {Backbone};
+\node[font=\scriptsize\sffamily\bfseries, gray] at (7.8, 3.5)  {Training};
+\node[font=\scriptsize\sffamily\bfseries, gray] at (11.6, 3.5) {Calibration};
+\node[font=\scriptsize\sffamily\bfseries, gray] at (15.4, 3.5) {Decision};
+
+% Bottom-line takeaway
+\node[font=\small\sffamily\bfseries, text width=16cm, align=center] at (10.0, -2.3) {
+    A clinically deployable framework: \quad
+    \textcolor{orange!70!black}{cost-sensitive training}
+    $\rightarrow$ \textcolor{cyan!70!black}{statistical safety guarantee}
+    $\rightarrow$ \textcolor{teal!70!black}{human-in-the-loop selective classification}
+};
+
+\end{tikzpicture}
+\end{document}
