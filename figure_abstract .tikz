@@ -1,159 +1,136 @@
-% Graphical Abstract — IEEE JBHI
-% Compile: pdflatex this_file
-% Output: PDF → convert to 660×295 px JPG at 300 dpi
+% Graphical Abstract — IEEE JBHI (660 × 295 px, aspect 2.24:1)
+% Compile: pdflatex → convert -density 300 out.pdf -resize 660x295 abstract.jpg
 \documentclass[tikz, border=0pt]{standalone}
 \usepackage{tikz}
 \usepackage{xcolor}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, calc, fit, patterns}
-
-% --- Palette ---
-\definecolor{cDanger}{HTML}{C0392B}
-\definecolor{cPhaseI}{HTML}{E67E22}   % amber / CSL
-\definecolor{cPhaseII}{HTML}{2471A3}  % steel blue / NP
-\definecolor{cPhaseIII}{HTML}{1E8449} % green / Selective
-\definecolor{cInput}{HTML}{7D3C98}    % purple / input
-\definecolor{cOutput}{HTML}{0E6655}   % dark teal / output
-\definecolor{cBg}{HTML}{F8F9FA}
+% --- Bold saturated palette ---
+\definecolor{cBase}{HTML}{34495E}   % dark blue-gray: baseline
+\definecolor{cP1}{HTML}{D4740E}     % deep amber: CSL
+\definecolor{cP2}{HTML}{2471A3}     % steel blue: NP
+\definecolor{cP3}{HTML}{1E8449}     % forest green: Selective
+\definecolor{cOut}{HTML}{7D3C98}    % purple: output
+\definecolor{cDanger}{HTML}{C0392B} % red: FNR
+\definecolor{cBg}{HTML}{F0F3F5}
 \definecolor{cText}{HTML}{2C3E50}
-\definecolor{cGray}{HTML}{AAB7B8}
-
 \begin{document}
 \begin{tikzpicture}[
-    x=1cm, y=1cm,
-    %
-    mainbox/.style n args={2}{
-        rectangle, rounded corners=5pt,
-        draw=#1!35, fill=white, line width=0.7pt,
-        minimum width=#2, minimum height=1.7cm,
-        inner sep=5pt, align=center, font=\sffamily
+    box/.style n args={2}{
+        rectangle, rounded corners=4pt, fill=#1, draw=#1!80!black, line width=0.5pt,
+        minimum width=#2, minimum height=1.4cm, inner sep=5pt, align=center,
+        font=\sffamily\color{white}, text=white
     },
-    %
-    topbar/.style={
-        rectangle, fill=#1, rounded corners=2pt,
-        minimum width=2.6cm, minimum height=0.10cm,
-        inner sep=0pt, anchor=north
-    },
-    %
-    arrow/.style={-{Stealth[round, length=4pt, width=4pt]}, line width=1.0pt, draw=cGray!80},
-    %
-    sectiontitle/.style={font=\sffamily\scriptsize\bfseries, text=cGray, letter-spacing=0.5},
-    %
-    % box text styles
-    boxtitle/.style={font=\sffamily\footnotesize\bfseries, text=cText},
-    boxdesc/.style={font=\sffamily\scriptsize, text=cText!80},
-    boxmetric/.style={font=\sffamily\footnotesize\bfseries},
+    arrow/.style={-{Stealth[round, length=4pt, width=4pt]}, line width=1.1pt, draw=cText!60},
+    smalltext/.style={font=\sffamily\scriptsize\color{white}},
+    bigtext/.style={font=\sffamily\bfseries\color{white}},
 ]
 
-% ===== TITLE AREA (top) =====
-\node[font=\sffamily\bfseries\Large, text=cText] at (9.5, 1.6) {
-    A Risk-Controlled Framework with Guaranteed Confidence
-};
-\node[font=\sffamily\small, text=cText!70] at (9.5, 1.0) {
-    for Lung Adenocarcinoma Micropapillary Subtype Classification
+% ===== TITLE =====
+\node[font=\sffamily\bfseries\large, text=cText] at (9.5, 1.5) {
+    A Risk-Controlled Framework for MIP Subtype Classification in Lung Adenocarcinoma
 };
 
-% ===== LEFT: Clinical Problem =====
-\node[mainbox={cInput}{2.8cm}] (inp) at (0, -0.15) {
-    \boxtitle MIP Pathology Images\\[2pt]
-    \boxdesc 7,133 ROI microscopy\\[-1pt]
-    \boxdesc images, MIP-labeled\\[2pt]
-    {\boxmetric\color{cDanger} Rare + Aggressive}\\[-1pt]
-    {\boxmetric\color{cDanger} $\approx$ 1 : 3.7 imbalance}
+% ===== PIPELINE: 6 boxes, solid fill =====
+% spacing: 3.5cm between centers, boxes 3.0cm wide
+
+\node[box={cBase}{2.8cm}] (base) at (0, 0) {
+    \bigtext ViT-MIL Baseline\\[2pt]
+    \smalltext Phikon + Gated Attention\\[2pt]
+    \smalltext ACC 93.4\% \quad FNR {\color{white}\bfseries 16.1\%}
 };
-\node[topbar=cInput] at (inp.north) {};
-% icon — four tile squares
-\draw[cInput!25, fill=cInput!8, rounded corners=1pt] (-1.1, 0.65) rectangle ++(0.38,0.38);
-\draw[cInput!25, fill=cInput!8, rounded corners=1pt] (-0.65, 0.65) rectangle ++(0.38,0.38);
-\draw[cInput!25, fill=cInput!12, rounded corners=1pt] (-1.1, 0.2) rectangle ++(0.38,0.38);
-\draw[cInput!25, fill=cInput!12, rounded corners=1pt] (-0.65, 0.2) rectangle ++(0.38,0.38);
 
-% ===== BASELINE =====
-\node[mainbox={cDanger}{2.8cm}] (base) at (4.3, -0.15) {
-    \boxtitle ViT-MIL Baseline\\[2pt]
-    \boxdesc Phikon encoder\\[-1pt]
-    \boxdesc Gated attention pooling\\[2pt]
-    {\boxmetric ACC 93.4\%\quad|\quad}
-    {\boxmetric\color{cDanger} FNR 16.1\%}
+\node[box={cP1}{2.8cm}] (p1) at (3.8, 0) {
+    \bigtext Phase I\\[2pt]
+    \smalltext Cost-Sensitive Learning\\[2pt]
+    \smalltext $w_1\!:\!w_0 = 10\!:\!1$ \quad FNR $\rightarrow$ {\bfseries 3.6\%}
 };
-\node[topbar=cDanger] at (base.north) {};
 
-% ===== PHASE I: CSL =====
-\node[mainbox={cPhaseI}{3.0cm}] (p1) at (8.0, -0.15) {
-    \boxtitle Phase I\\[1pt]
-    \boxdesc Cost-Sensitive Learning\\[1pt]
-    \boxdesc Reweight loss $w_1\!:\!w_0 = 10\!:\!1$\\[2pt]
-    {\boxmetric\color{cPhaseI} FNR $\downarrow$ 3.6\%}
+\node[box={cP2}{2.8cm}] (p2) at (7.6, 0) {
+    \bigtext Phase II\\[2pt]
+    \smalltext Neyman--Pearson Calibration\\[2pt]
+    \smalltext $\mathbb{P}(\text{FNR}>\alpha)\leq\delta$
 };
-\node[topbar=cPhaseI] at (p1.north) {};
-\node[sectiontitle] at (8.0, 0.85) {TRAINING};
 
-% ===== PHASE II: NP =====
-\node[mainbox={cPhaseII}{3.0cm}] (p2) at (11.8, -0.15) {
-    \boxtitle Phase II\\[1pt]
-    \boxdesc Neyman--Pearson Calibration\\[1pt]
-    \boxdesc Order-statistic threshold\\[2pt]
-    {\boxmetric\color{cPhaseII} $\mathbb{P}(\text{FNR}\!>\!\alpha)\leq\delta$}
+\node[box={cP3}{2.8cm}] (p3) at (11.4, 0) {
+    \bigtext Phase III\\[2pt]
+    \smalltext Selective Classification\\[2pt]
+    \smalltext Confident $\rightarrow$ accept, Uncertain $\rightarrow$ defer
 };
-\node[topbar=cPhaseII] at (p2.north) {};
-\node[sectiontitle] at (11.8, 0.85) {CALIBRATION};
 
-% ===== PHASE III: Selective =====
-\node[mainbox={cPhaseIII}{3.2cm}] (p3) at (15.8, -0.15) {
-    \boxtitle Phase III\\[1pt]
-    \boxdesc Selective Classification\\[1pt]
-    \boxdesc SelectiveNet + CRC calibration\\[2pt]
-    {\boxmetric\color{cPhaseIII} Coverage 91.0\%\ |\ FNR 5.1\%}
+\node[box={cOut}{2.8cm}] (out) at (15.2, 0) {
+    \bigtext Clinical Deployment\\[2pt]
+    \smalltext Coverage {\bfseries 91.0\%}\\[2pt]
+    \smalltext FNR {\bfseries 5.1\%} (guaranteed)
 };
-\node[topbar=cPhaseIII] at (p3.north) {};
-\node[sectiontitle] at (15.8, 0.85) {DECISION};
 
-% ===== RIGHT: Output =====
-\node[mainbox={cOutput}{2.6cm}] (out) at (19.0, -0.15) {
-    \boxtitle Clinical Deployment\\[4pt]
-    \boxdesc FNR bounded \& guaranteed\\[-1pt]
-    \boxdesc Uncertain $\to$ pathologist\\[-1pt]
-    \boxdesc Confident $\to$ automated
-};
-\node[topbar=cOutput] at (out.north) {};
+% Arrows
+\draw[arrow, white!60!black] (base.east) -- (p1.west);
+\draw[arrow, white!60!black] (p1.east)   -- (p2.west);
+\draw[arrow, white!60!black] (p2.east)   -- (p3.west);
+\draw[arrow, white!60!black] (p3.east)   -- (out.west);
 
-% ===== ARROWS =====
-\draw[arrow] (inp.east)  -- (base.west);
-\draw[arrow] (base.east) -- (p1.west);
-\draw[arrow] (p1.east)   -- (p2.west);
-\draw[arrow] (p2.east)   -- (p3.west);
-\draw[arrow] (p3.east)   -- (out.west);
+% Arrow annotations
+\node[font=\sffamily\tiny, text=cText!70, anchor=south] at ($(base.east)!0.5!(p1.west) + (0,0.05)$) {retrain};
+\node[font=\sffamily\tiny, text=cText!70, anchor=south] at ($(p1.east)!0.5!(p2.west) + (0,0.05)$) {calibrate};
+\node[font=\sffamily\tiny, text=cText!70, anchor=south] at ($(p2.east)!0.5!(p3.west) + (0,0.05)$) {add reject};
+\node[font=\sffamily\tiny, text=cText!70, anchor=south] at ($(p3.east)!0.5!(out.west) + (0,0.05)$) {deploy};
 
-% ===== BOTTOM PANEL =====
+% ===== Phase labels above =====
+\node[font=\sffamily\footnotesize\bfseries, text=cText] at (0, 0.95)    {Backbone};
+\node[font=\sffamily\footnotesize\bfseries, text=cP1]   at (3.8, 0.95)  {Training};
+\node[font=\sffamily\footnotesize\bfseries, text=cP2]   at (7.6, 0.95)  {Calibration};
+\node[font=\sffamily\footnotesize\bfseries, text=cP3]   at (11.4, 0.95) {Decision};
+\node[font=\sffamily\footnotesize\bfseries, text=cOut]  at (15.2, 0.95) {Output};
+
+% ===== FNR METRIC BAR (bottom) =====
 \begin{scope}[on background layer]
-    \fill[cBg, rounded corners=6pt] (0.2, -2.5) rectangle (18.8, -3.8);
+    \fill[cBg, rounded corners=4pt] (0.2, -1.7) rectangle (18.0, -2.9);
 \end{scope}
 
-% Three insight columns
-\node[font=\sffamily\footnotesize, align=center, text width=5.2cm, inner sep=4pt] at (4.3, -3.1) {
-    {\bfseries\color{cPhaseI} Clinical Challenge}\\[2pt]
-    MIP is a rare yet aggressive LUAD subtype.\\
-    Standard DL models optimize average accuracy\\
-    and produce unacceptably high false-negative rates.
+% Metric callouts aligned under each box
+\node[font=\sffamily\footnotesize, align=center, text=cText] at (0, -2.3) {
+    {\bfseries\color{cDanger} Problem}\\[1pt]
+    Imbalanced\\
+    High FNR
 };
 
-\node[font=\sffamily\footnotesize, align=center, text width=5.2cm, inner sep=4pt] at (9.5, -3.1) {
-    {\bfseries\color{cPhaseII} Our Approach}\\[2pt]
-    Three complementary phases acting in concert:\\
-    CSL penalizes missed diagnoses $\to$ NP provides\\
-    a formal FNR guarantee $\to$ SelectiveNet defers\\
-    ambiguous cases to human pathologists.
+\node[font=\sffamily\footnotesize, align=center, text=cText] at (3.8, -2.3) {
+    {\bfseries\color{cP1} Phase I}\\[1pt]
+    Penalize FN\\
+    Heuristic only
 };
 
-\node[font=\sffamily\footnotesize, align=center, text width=5.2cm, inner sep=4pt] at (14.7, -3.1) {
-    {\bfseries\color{cPhaseIII} Key Result}\\[2pt]
-    FNR reduced from {\bfseries 16.1\%} to {\bfseries 5.1\%}\\
-    at {\bfseries 91.0\%} coverage, with a rigorous\\
-    statistical guarantee on the missed-diagnosis rate.
+\node[font=\sffamily\footnotesize, align=center, text=cText] at (7.6, -2.3) {
+    {\bfseries\color{cP2} Phase II}\\[1pt]
+    Formal FNR bound\\
+    Cost: specificity
 };
 
-% Vertical dividers
-\draw[cGray!30, line width=0.3pt] (7.0, -2.7) -- (7.0, -3.6);
-\draw[cGray!30, line width=0.3pt] (12.0, -2.7) -- (12.0, -3.6);
+\node[font=\sffamily\footnotesize, align=center, text=cText] at (11.4, -2.3) {
+    {\bfseries\color{cP3} Phase III}\\[1pt]
+    Reject uncertain\\
+    Recover coverage
+};
+
+\node[font=\sffamily\footnotesize, align=center, text=cText] at (15.2, -2.3) {
+    {\bfseries\color{cOut} Result}\\[1pt]
+    FNR 16.1\% $\rightarrow$ 5.1\%\\
+    Coverage 91.0\%
+};
+
+% thin connectors from boxes to metrics
+\foreach \x/\c in {0/cBase, 3.8/cP1, 7.6/cP2, 11.4/cP3, 15.2/cOut} {
+    \draw[\c!30, line width=0.4pt, densely dotted] (\x, -0.72) -- (\x, -1.65);
+}
+
+% ===== BOTTOM LINE =====
+\node[font=\sffamily\bfseries\small, text=cText] at (9.5, -3.3) {
+    Cost-sensitive training
+    $\boldsymbol{\rightarrow}$
+    Statistical safety guarantee
+    $\boldsymbol{\rightarrow}$
+    Human-in-the-loop selective classification
+};
 
 \end{tikzpicture}
 \end{document}
