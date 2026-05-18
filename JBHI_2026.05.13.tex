@@ -75,10 +75,8 @@ Throughout the paper, we use lowercase letters for scalars, bold lowercase for v
 % Due to limited space, the related work is included in Appendix \ref{S6-3}.
 
 \section{Related Work}\label{S6-3}
-\textcolor{red}{Overview of issues in Chapter 2
-I believe Chapter 2 has substantial logical deficiencies. After reorganizing the overall research logic, I plan to fully rewrite this chapter. The revised version will separately review the state-of-the-art advances in three research directions: MIP pathological subtyping, cost-sensitive learning and Neyman–Pearson classification, and selective inference. For each field, I will elaborate on its inherent limitations when applied to practical clinical diagnosis scenarios, which can also form a logical echo with Chapter 1.\\
-For instance, existing studies in the MIP community predominantly focus on overall accuracy while neglecting the false negative rate (FNR). Each of the three research domains still suffers from unresolved inherent drawbacks. By integrating these three fields organically, our work constructs a robust, stable, and efficient unified framework to address the above limitations.\\
-I have placed the rewritten content of Chapter 2 in the draft document.}
+\textcolor{red}{}
+
 Our review of related work is structured along three complementary dimensions that collectively address the core challenge of building a clinically trustworthy deep learning model for high-risk pathology detection.
 
 \subsection{DL and MIL in Computational Pathology}
@@ -98,6 +96,7 @@ A more rigorous alternative is the Neyman–Pearson (NP) framework, which treats
 Effective clinical deployment of AI requires models that know when to abstain—often termed “intellectual humility” in high-stakes settings. Selective classification provides a mechanism for this by allowing a model to reject uncertain predictions and defer them to human experts, trading coverage for higher reliability on accepted cases \cite{hendrycks2016baseline, leibig2022combining}. Architecturally, SelectiveNet \cite{geifman2019selectivenet, geifman2017selective} jointly trains prediction and selection heads to optimize performance on the covered subset, an approach later extended to handle distribution shifts and hierarchical rejection schemes \cite{goren2024hierarchical}.
 
 Conformal risk control (CRC) \cite{angelopoulos2022conformal} offers a complementary, post-hoc framework that provides distribution-free guarantees on user-defined risk metrics. CRC has been applied in medical imaging to enable reliable human-in-the-loop workflows \cite{dvijotham2023enhancing, dai2017tumor}. In this work, we integrate SelectiveNet with CRC to create a dual-safeguard system: SelectiveNet learns to identify ambiguous inputs, while CRC calibrates the rejection threshold to meet predefined clinical safety bounds.
+
 
 \section{Methodology}\label{sec:methodology}
 
@@ -144,8 +143,8 @@ where $V,\,U \in \mathbb{R}^{d_a \times d_h}$ and $\mathbf{w} \in \mathbb{R}^{d_
 \begin{equation*}
     \mathbf{z}_i = \sum_{j=1}^{n_i} a_{i,j}\,\mathbf{h}_{i,j}.
 \end{equation*}
-A linear classifier then projects $\mathbf{z}_i$ to a scalar logit, and a sigmoid activation yields the predicted bag-level probability $\hat{p}_i = \sigma\!\left(h_{\mathrm{c}}(\mathbf{z}_i)\right)$. \textcolor{red}{This formulation provides a fully differentiable, permutation-invariant aggregation scheme that assigns interpretable importance weights to individual tiles.}
-\textcolor{cyan}{These properties are common attributes of MIP. Is it necessary to elaborate on them here?}
+A linear classifier then projects $\mathbf{z}_i$ to a scalar logit, and a sigmoid function yields the predicted bag-level probability $\hat{p}_i = \sigma\!\left(h_{\mathrm{c}}(\mathbf{z}_i)\right)$. This formulation provides a permutation-invariant aggregation mechanism that assigns interpretable importance weights to individual tiles, which is a desirable property for multiple instance learning.
+
 \subsection{Phase I: Risk-Aware Training via Cost-Sensitive Learning}\label{sec:phase1_method}
 
 While the baseline model follows a standard training objective that minimizes average classification error, this approach overlooks the clinical asymmetry of risks: false negatives (FN) are considerably more costly than false positives (FP) in high‑stakes diagnostic settings. To incorporate this asymmetry directly into representation learning, we adopt a cost‑sensitive learning (CSL) strategy to enforce higher penalties on false negatives \cite{he2009learning}.  Let \(\mathcal{D} = \{(X_i, y_i)\}_{i=1}^{n}\) denote the training set, where \(y_i \in \{0,1\}\) indicates the label (1 for MIP‑present, 0 for MIP‑absent) and \(\hat{p}_i\) is the predicted positive probability. The cost‑sensitive loss is defined as  
@@ -224,8 +223,7 @@ We formulate a differentiable objective to approximate the constraints in Theore
 \begin{equation*}
     \mathcal{L} = \gamma \left(\hat{R}_n(f,g) + \Psi(g)\right) + (1-\gamma) \ell_{\mathrm{ce}}(h(\mathbf{z}_i), y_i),
 \end{equation*}
-where $\gamma$ balances between selective optimization and auxiliary classification, \textcolor{red}{mirroring} the role of the theoretical risk bound $\epsilon$. Minimizing $\mathcal{L}$ encourages the model to select samples with low prediction error, driving $\hat{R}_n(f,g)$ toward the theoretical guarantee. We then introduce four cases to achieve explicit control over risk and/or false negative rate (FNR).
-\textcolor{cyan}{The word "mirroring" is not very accurate.}
+where $\gamma$ balances between selective optimization and auxiliary classification, mirroring the role of the theoretical risk bound $\epsilon$. Minimizing $\mathcal{L}$ encourages the model to select samples with low prediction error, driving $\hat{R}_n(f,g)$ toward the theoretical guarantee. We then introduce four cases to achieve explicit control over risk and/or false negative rate (FNR).
 
 \textbf{Case 1: Risk Control.}
 Empirical threshold selection via calibration:
@@ -335,7 +333,6 @@ As shown in Figure \ref{fig:cv_plots}, while the AUC remains consistently high a
 
 Existing state-of-the-art MIL architectures (e.g., CLAM-SB, DS-MIL, DTFD-MIL, TransMIL) are originally designed for whole-slide image (WSI) classification, which involves large bag sizes and macro-level sparsity. In contrast, our clinical task focuses on region-of-interest (ROI) microscopy images, which exhibit denser morphological patterns and highly localized spatial contexts. To establish a fair benchmark, we adapt these aggregators into a unified ROI-optimized pipeline: all models take identical Phikon-encoded \cite{filiot2023scaling} tile features $H_i = \{h_{i,j}\}_{j=1}^{n_i} \in \mathbb{R}^{n_i \times d}$ ($d=768$) as input, preserving their core aggregation algorithms while standardizing tile extraction and feature encoding, thereby decoupling feature representation from aggregation mechanism. The competing models are summarized as follows:
 
-\textcolor{red}{I think the descriptions of the four models here are overly detailed, and a brief introduction will suffice.}
 \begin{itemize}
     \item \textbf{CLAM-SB} (Clustering-constrained-attention MIL) \cite{lu2021data}: It augments standard attention with an instance-level clustering objective. Its attention network employs a gated mechanism to obtain bag-level representations. Additionally, CLAM-SB selects the most highly attended patches (Top-$k$) to generate pseudo-labels, jointly optimizing a bag-level classification loss and an instance-level clustering loss. This auxiliary supervision linearly separates critical micropapillary (MIP) patterns from benign background tissues in the feature space.
     
@@ -459,8 +456,8 @@ Phase II introduces Neyman–Pearson (NP) thresholding to obtain formal, statist
     }
 \end{table}
 
-These results illustrate how Neyman–Pearson thresholding enables precise, statistically grounded control of the safety–efficiency trade‑off. Tighter miss‑risk targets shift the decision threshold downward, thereby lowering the false negative rate (FNR) at the expense of overall accuracy. Compared with cost-sensitive learning, NP can exactly control the false negative rate (FNR) at a specified level. However, it requires holding out a positive calibration set for threshold tuning, which not only reduces the number of samples in the training set but also exacerbates the class imbalance between positive and negative samples. \textcolor{red}{This fully validates the no-free-lunch theorem.}
-\textcolor{cyan}{This sentence is not quite appropriate here. The No Free Lunch theorem has a specific definition in machine learning.}
+These results illustrate how Neyman–Pearson thresholding enables precise, statistically grounded control of the safety–efficiency trade‑off. Tighter miss‑risk targets shift the decision threshold downward, thereby lowering the false negative rate (FNR) at the expense of overall accuracy. Compared with cost-sensitive learning, NP can exactly control the false negative rate (FNR) at a specified level. However, it requires holding out a positive calibration set for threshold tuning, which not only reduces the number of samples in the training set but also exacerbates the class imbalance between positive and negative samples. This fully validates the no-free-lunch theorem.
+
 
 \subsection{Enhanced Phase II: Cost-Sensitive Learning Boosting Neyman–Pearson Calibration}\label{S3-4}
 
