@@ -144,8 +144,8 @@ where $V,\,U \in \mathbb{R}^{d_a \times d_h}$ and $\mathbf{w} \in \mathbb{R}^{d_
 \begin{equation*}
     \mathbf{z}_i = \sum_{j=1}^{n_i} a_{i,j}\,\mathbf{h}_{i,j}.
 \end{equation*}
-A linear classifier then projects $\mathbf{z}_i$ to a scalar logit, and a sigmoid activation yields the predicted bag-level probability $\hat{p}_i = \sigma\!\left(h_{\mathrm{c}}(\mathbf{z}_i)\right)$. This formulation provides a fully differentiable, permutation-invariant aggregation scheme that assigns interpretable importance weights to individual tiles.
-
+A linear classifier then projects $\mathbf{z}_i$ to a scalar logit, and a sigmoid activation yields the predicted bag-level probability $\hat{p}_i = \sigma\!\left(h_{\mathrm{c}}(\mathbf{z}_i)\right)$. \textcolor{red}{This formulation provides a fully differentiable, permutation-invariant aggregation scheme that assigns interpretable importance weights to individual tiles.}
+\textcolor{cyan}{These properties are common attributes of MIP. Is it necessary to elaborate on them here?}
 \subsection{Phase I: Risk-Aware Training via Cost-Sensitive Learning}\label{sec:phase1_method}
 
 While the baseline model follows a standard training objective that minimizes average classification error, this approach overlooks the clinical asymmetry of risks: false negatives (FN) are considerably more costly than false positives (FP) in high‑stakes diagnostic settings. To incorporate this asymmetry directly into representation learning, we adopt a cost‑sensitive learning (CSL) strategy to enforce higher penalties on false negatives \cite{he2009learning}.  Let \(\mathcal{D} = \{(X_i, y_i)\}_{i=1}^{n}\) denote the training set, where \(y_i \in \{0,1\}\) indicates the label (1 for MIP‑present, 0 for MIP‑absent) and \(\hat{p}_i\) is the predicted positive probability. The cost‑sensitive loss is defined as  
@@ -182,7 +182,8 @@ The guarantee is distribution-free, holds in finite samples, and is invariant to
 
 \subsection{Phase III: Selective Classification via Conformal Risk Control}\label{sec:phase3_method}
 
-We propose a hybrid framework that unifies theoretical risk modeling, selective optimization, and rigorous post-hoc calibration. Built upon the learning-theoretic guarantees of selective classification, our method employs a deep neural network for approximation and is strictly calibrated to ensure clinical safety.
+\textcolor{red}{We propose a hybrid framework that unifies theoretical risk modeling, selective optimization, and rigorous post-hoc calibration. Built upon the learning-theoretic guarantees of selective classification, our method employs a deep neural network for approximation and is strictly calibrated to ensure clinical safety.}
+\textcolor{cyan}{I think we need to explain how these three stages are integrated here.}
 
 For a selective classifier $(f,g)$, the empirical risk is defined as
 \[
@@ -223,7 +224,8 @@ We formulate a differentiable objective to approximate the constraints in Theore
 \begin{equation*}
     \mathcal{L} = \gamma \left(\hat{R}_n(f,g) + \Psi(g)\right) + (1-\gamma) \ell_{\mathrm{ce}}(h(\mathbf{z}_i), y_i),
 \end{equation*}
-where $\gamma$ balances between selective optimization and auxiliary classification, mirroring the role of the theoretical risk bound $\epsilon$. Minimizing $\mathcal{L}$ encourages the model to select samples with low prediction error, driving $\hat{R}_n(f,g)$ toward the theoretical guarantee. We then introduce four cases to achieve explicit control over risk and/or false negative rate (FNR).
+where $\gamma$ balances between selective optimization and auxiliary classification, \textcolor{red}{mirroring} the role of the theoretical risk bound $\epsilon$. Minimizing $\mathcal{L}$ encourages the model to select samples with low prediction error, driving $\hat{R}_n(f,g)$ toward the theoretical guarantee. We then introduce four cases to achieve explicit control over risk and/or false negative rate (FNR).
+\textcolor{cyan}{The word "mirroring" is not very accurate.}
 
 \textbf{Case 1: Risk Control.}
 Empirical threshold selection via calibration:
@@ -283,7 +285,7 @@ In this section, we systematically evaluate the proposed framework through a cas
 
 \subsection{Experimental Setup}\label{S3-1}
 
-We implement our framework in PyTorch and conduct all experiments on an NVIDIA RTX 5090 GPU (32 GB). The dataset comprises 7,133 locally collected pathology images with image-level labels indicating the presence ($y=1$) or absence ($y=0$) of MIP. Following common practice in computational pathology \cite{campanella2019clinical,lu2021data}, we partition each image into overlapping $512 \times 512$ tiles using a stride of 256, applying reflection padding at boundaries to ensure full coverage. Each tile is resized to $224 \times 224$ to preserve tissue-level context. To handle variable bag sizes in mini-batches, we employ zero-padding with an attention mask that excludes padded regions from gradient updates. All tiles are normalized using ImageNet statistics. During training, we apply strong data augmentation via Albumentations \cite{buslaev2020albumentations}, including random flips, moderate rotations, and color jitter.
+We implement our framework in PyTorch and conduct all experiments on an NVIDIA RTX 5090 GPU (32 GB). The dataset comprises 7,133 locally collected pathology images with image-level labels indicating the presence ($y=1$) or absence ($y=0$) of MIP. Following common practice in computational pathology \cite{campanella2019clinical,lu2021data}, we partition each image into overlapping $512 \times 512$ tiles using a stride of 256, applying reflection padding at boundaries to ensure full coverage. Each tile is resized to $224 \times 224$ to preserve tissue-level context. To handle variable bag sizes in mini-batches, we employ zero-padding with an attention mask that excludes padded regions from gradient updates. All tiles are normalized using ImageNet statistics\cite{russakovsky2015imagenet}. During training, we apply strong data augmentation via Albumentations \cite{buslaev2020albumentations}, including random flips, moderate rotations, and color jitter.
 
 We initialize the ViT-based MIL baseline with Phikon weights \cite{filiot2023scaling} and adopt gated attention pooling \cite{ilse2018attention}. The dataset is split into 80\% training and 20\% test using stratified sampling. All models are optimized with the same protocol: AdamW \cite{loshchilov2017decoupled} (learning rate $10^{-5}$, weight decay $0.05$) for 15 epochs, a cosine schedule with 10\% linear warmup \cite{loshchilov2016sgdr}, mixed precision, and gradient accumulation (batch size 8, accumulation steps 4). Regularization includes dropout of 0.2 and label smoothing of 0.1 \cite{szegedy2016rethinking}. To ensure stable and reproducible evaluation, we fix random seeds and enable deterministic cuDNN. Unless stated otherwise, results are reported using the final training checkpoint with a default decision threshold of $\tau = 0.5$.
 
@@ -457,7 +459,8 @@ Phase II introduces Neyman–Pearson (NP) thresholding to obtain formal, statist
     }
 \end{table}
 
-These results illustrate how Neyman–Pearson thresholding enables precise, statistically grounded control of the safety–efficiency trade‑off. Tighter miss‑risk targets shift the decision threshold downward, thereby lowering the false negative rate (FNR) at the expense of overall accuracy. Compared with cost-sensitive learning, NP can exactly control the false negative rate (FNR) at a specified level. However, it requires holding out a positive calibration set for threshold tuning, which not only reduces the number of samples in the training set but also exacerbates the class imbalance between positive and negative samples. This fully validates the no-free-lunch theorem.
+These results illustrate how Neyman–Pearson thresholding enables precise, statistically grounded control of the safety–efficiency trade‑off. Tighter miss‑risk targets shift the decision threshold downward, thereby lowering the false negative rate (FNR) at the expense of overall accuracy. Compared with cost-sensitive learning, NP can exactly control the false negative rate (FNR) at a specified level. However, it requires holding out a positive calibration set for threshold tuning, which not only reduces the number of samples in the training set but also exacerbates the class imbalance between positive and negative samples. \textcolor{red}{This fully validates the no-free-lunch theorem.}
+\textcolor{cyan}{This sentence is not quite appropriate here. The No Free Lunch theorem has a specific definition in machine learning.}
 
 \subsection{Enhanced Phase II: Cost-Sensitive Learning Boosting Neyman–Pearson Calibration}\label{S3-4}
 
@@ -517,7 +520,7 @@ A Multiple-Instance Learning (MIL) model with an explicit reject option, followi
  
 To ensure statistical reliability of the empirical threshold $\tau^*$, we employ a Stratified 5-Fold Cross-Validation scheme with a Swap-Calibration strategy. In each fold, the held-out validation set is split into two disjoint subsets $\mathcal{D}_A$ and $\mathcal{D}_B$. Two independent evaluations are performed per fold: first, calibrating $\tau^*$ on $\mathcal{D}_A$ and evaluating on $\mathcal{D}_B$; second, swapping the roles by calibrating on $\mathcal{D}_B$ and evaluating on $\mathcal{D}_A$. This yields $10$ independent assessments in total, ensuring that reported safety metrics—Risk and Coverage—are computed strictly on held-out data, thereby reducing variance due to calibration.
 
-Following the above implementation and evaluation setup, experiments are organized into two clinical paradigms shown in Figure \ref{F1}. Cases 1 and 3 target general reliability by calibrating the model to satisfy a Risk Target $\alpha \in \{1\%, 3\%, 5\%, 10\%\}$. In contrast, Cases 2 and 4 emphasize sensitiy, enforcing a False Negative Rate (FNR) Target with the same $\alpha$ values to reduce missed diagnoses. The workflows and comparative results of the four cases are summarized in Figure \ref{F1}.
+Following the above implementation and evaluation setup, experiments are organized into two clinical paradigms shown in Figure \ref{F1}. Cases 1 and 3 target general reliability by calibrating the model to satisfy a Risk Target $\alpha \in \{1\%, 3\%, 5\%, 10\%\}$. In contrast, Cases 2 and 4 emphasize sensitivity enforcing a False Negative Rate (FNR) Target with the same $\alpha$ values to reduce missed diagnoses. The workflows and comparative results of the four cases are summarized in Figure \ref{F1}.
 
 \begin{figure*}[htbp]
   \centering
@@ -645,7 +648,7 @@ In this case, we address the coverage bottleneck observed in Case~2. Using the s
     }
 \end{table}
 
-Table~\ref{tab:case4_results} presents results for FNR control with cost-sensitive backbones ($w_1 \in \{5,10\}$). Compared to Case~2, the cost-weighted models substantially recover coverage while satisfying the same FNR target. For instance, at $\alpha=1\%$, coverage improves from $41.87\%$ to $56.04\%$ ($w_1=5$) and further to $58.69\%$ ($w_1=10$). This gain arises because the reweighted training yields higher confidence on positive samples, reducing the need for an aggressive rejection threshold during calibration. At $\alpha=5\%$, coverage reaches $83.72\%$ ($w_1=5$) and $91.02\%$ ($w_1=10$) while maintaining a low test risk (below $5\%$), offering a practical operating point for clinical deployment. Case~4 with $w_1 = 10$ provides the more effective configuration than $w_1 = 5$ for safety-critical deployment: it strictly bounds missed diagnoses while maximizing patient coverage rate.
+Table~\ref{tab:case4_results} presents results for FNR control with cost-sensitive backbones ($w_1 \in \{5,10\}$). Compared to Case~2, the cost-weighted models substantially recover coverage while satisfying the same FNR target. For instance, at $\alpha=1\%$, coverage improves from $41.87\%$ to $56.04\%$ ($w_1=5$) and further to $58.69\%$ ($w_1=10$). This gain arises because the reweighted training yields higher confidence on positive samples, reducing the need for an aggressive rejection threshold during calibration. At $\alpha=5\%$, coverage reaches $83.72\%$ ($w_1=5$) and $91.02\%$ ($w_1=10$) while maintaining a low test risk (below $5\%$), offering a practical operating point for clinical deployment. Case~4 with $w_1 = 10$ provides a more effective configuration than $w_1 = 5$ for safety-critical deployment: it strictly bounds missed diagnoses while maximizing patient coverage rate.
 The results confirm that aligning training with the safety objective (FNR control) mitigates the inherent coverage–safety trade-off.
 
 \begin{figure}[!htbp]
