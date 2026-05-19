@@ -23,7 +23,7 @@
 \title{A Risk-Controlled Framework with Guaranteed Confidence for Lung Adenocarcinoma Classification}
 \author{Jianxu Wang$^{\dagger}$, Huijun Zhou$^{\dagger}$ and Xuewei Cheng
 \thanks{$^{\dagger}$ These authors contributed equally to this work.}
-\thanks{This research is supported by the Natural Science Foundation of Hunan Province 2024JJ6303, and the Research Foundation of the Education Department of Hunan Province 23B0056. (Corresponding author: Xuewei Cheng.)}
+\thanks{This research is supported by the Natural Science Foundation of Hunan Province 2024JJ6303, the Research Foundation of the Education Department of Hunan Province 23B0056, Hunan Provincial NSF Key Project 2025JJ30008, Hunan Furong Program High-Level Health Talent Support Project 20241226039 and High-Level Talent Support Program of Hunan Cancer Hospital 202507311010. (Corresponding author: Xuewei Cheng.)}
 \thanks{This study involved human participants and was conducted in accordance with the principles of the Declaration of Helsinki. The research protocol entitled “A Risk-Controlled Framework with Guaranteed Confidence for Lung Adenocarcinoma Classification” was reviewed and approved by the Medical Ethics Committee of Hunan Cancer Hospital (approval no. 2026 Scientific Research Expedited Review [106]) on April 22, 2026. The committee granted a final decision of “Approved” under the expedited review procedure. All procedures involving human subjects were performed in compliance with relevant institutional and national regulations.}
 \thanks{Jianxu Wang, MOE-LCSM, School of Mathematics and Statistics, Hunan Normal University. E-mail~address: 202330125008@hunnu.edu.cn.}
 \thanks{Huijun Zhou, Medical Oncology, Hunan Cancer Hospital. E-mail~address: zhouhuijun@hnca.org.}
@@ -75,8 +75,7 @@ Throughout the paper, we use lowercase letters for scalars, bold lowercase for v
 % Due to limited space, the related work is included in Appendix \ref{S6-3}.
 
 \section{Related Work}\label{S6-3}
-\textcolor{red}{}
-
+\textcolor{red}{Is it necessary to illustrate that cost-sensitive learning (CSL) is widely applied in research on imbalanced data? Besides, I think the content in the related work section is relatively concise. Are there any parts that need further elaboration?}
 Our review of related work is structured along three complementary dimensions that collectively address the core challenge of building a clinically trustworthy deep learning model for high-risk pathology detection.
 
 \subsection{DL and MIL in Computational Pathology}
@@ -95,8 +94,12 @@ A more rigorous alternative is the Neyman–Pearson (NP) framework, which treats
 
 Effective clinical deployment of AI requires models that know when to abstain—often termed “intellectual humility” in high-stakes settings. Selective classification provides a mechanism for this by allowing a model to reject uncertain predictions and defer them to human experts, trading coverage for higher reliability on accepted cases \cite{hendrycks2016baseline, leibig2022combining}. Architecturally, SelectiveNet \cite{geifman2019selectivenet, geifman2017selective} jointly trains prediction and selection heads to optimize performance on the covered subset, an approach later extended to handle distribution shifts and hierarchical rejection schemes \cite{goren2024hierarchical}.
 
-Conformal risk control (CRC) \cite{angelopoulos2022conformal} offers a complementary, post-hoc framework that provides distribution-free guarantees on user-defined risk metrics. CRC has been applied in medical imaging to enable reliable human-in-the-loop workflows \cite{dvijotham2023enhancing, dai2017tumor}. In this work, we integrate SelectiveNet with CRC to create a dual-safeguard system: SelectiveNet learns to identify ambiguous inputs, while CRC calibrates the rejection threshold to meet predefined clinical safety bounds.
 
+Conformal risk control (CRC) \cite{angelopoulos2022conformal} offers a complementary, post-hoc framework that provides distribution-free guarantees on user-defined risk metrics. CRC has been applied in medical imaging to enable reliable human-in-the-loop workflows \cite{dvijotham2023enhancing, dai2017tumor}. Inspired by CRC, we incorporate risk control and FNR control 
+into the threshold calibration of selective classification, 
+enabling SelectiveNet to simultaneously learn ambiguous input 
+representations while providing rigorous, distribution-free 
+guarantees on clinically safety bounds.
 
 \section{Methodology}\label{sec:methodology}
 
@@ -181,8 +184,7 @@ The guarantee is distribution-free, holds in finite samples, and is invariant to
 
 \subsection{Phase III: Selective Classification via Conformal Risk Control}\label{sec:phase3_method}
 
-\textcolor{red}{We propose a hybrid framework that unifies theoretical risk modeling, selective optimization, and rigorous post-hoc calibration. Built upon the learning-theoretic guarantees of selective classification, our method employs a deep neural network for approximation and is strictly calibrated to ensure clinical safety.}
-\textcolor{cyan}{I think we need to explain how these three stages are integrated here.}
+We propose a hybrid framework that unifies theoretical risk modeling, selective optimization, and rigorous post-hoc calibration. Built upon the learning-theoretic guarantees of selective classification, our method employs a deep neural network for approximation and is strictly calibrated to ensure clinical safety.
 
 For a selective classifier $(f,g)$, the empirical risk is defined as
 \[
