@@ -86,7 +86,7 @@ Nevertheless, most existing MIL approaches are optimized for average performance
 
 \subsection{Risk-Aware Learning: From Cost-Sensitive to Neyman-Pearson}
 
-Standard training objectives assume symmetric error costs and balanced classes, which poorly align with medical diagnosis where rare, high-risk conditions demand stricter control of false negatives. Cost-sensitive learning (CSL) partly mitigates this by re-weighting the loss to penalize false negatives more heavily \cite{el2010foundations,he2009learning}. However, CSL typically depends on heuristically tuned weights and provides no formal guarantee on the resulting error rates.
+Standard training objectives assume symmetric error costs and balanced classes, which poorly align with medical diagnosis where rare, high-risk conditions demand stricter control of false negatives. Cost-sensitive learning (CSL) partly mitigates this by re-weighting the loss to penalize false negatives more heavily \cite{elkan2001foundations,he2009learning}. However, CSL typically depends on heuristically tuned weights and provides no formal guarantee on the resulting error rates.
 
 A more rigorous alternative is the Neyman–Pearson (NP) framework, which treats classification as a constrained optimization problem: minimizing the type II error (false negative rate) while bounding the type I error (false positive rate) below a user-defined level \cite{rigollet2011neyman,tong2018neyman}. Recent advances have further extended the NP framework to multi-class settings through cost-sensitive formulations, underscoring its relevance for safety-aware learning \cite{tian2025neyman}. In our work, we adopt this perspective to provide explicit statistical control of the false-negative rate for MIP detection, moving beyond heuristic re-weighting.
 
@@ -99,7 +99,7 @@ Conformal risk control (CRC) \cite{angelopoulos2022conformal} offers a complemen
 into the threshold calibration of selective classification, 
 enabling SelectiveNet to simultaneously learn ambiguous input 
 representations while providing rigorous, distribution-free 
-guarantees on clinically safety bounds.
+guarantees on clinical safety bounds.
 
 \section{Methodology}\label{sec:methodology}
 
@@ -379,7 +379,7 @@ As shown in the table \ref{tab:sota_comparison}, the predictive performance of t
 
 \subsection{Phase I: Risk-Aware Training via Cost-Sensitive Learning}\label{sec:phase1_results}
 
-To mitigate the high false negative rate (FNR) observed in the baseline, we adopt Cost-Sensitive Learning (CSL) \cite{he2009learning,zadrozny2004learning}. For each positive-class weight $w_{1} \in \{5,10,15,20\}$, we train the same ViT-MIL architecture using a class-weighted cross-entropy loss, with the negative-class weight fixed at $w_{0}=1$. For evaluation, we maintain the same decision threshold $\tau = 0.5$. Figure~\ref{fig:main_diagram} illustrates the overall behavior across different cost scenarios.
+To mitigate the high false negative rate (FNR) observed in the baseline, we adopt Cost-Sensitive Learning (CSL) \cite{he2009learning,elkan2001foundations}. For each positive-class weight $w_{1} \in \{5,10,15,20\}$, we train the same ViT-MIL architecture using a class-weighted cross-entropy loss, with the negative-class weight fixed at $w_{0}=1$. For evaluation, we maintain the same decision threshold $\tau = 0.5$. Figure~\ref{fig:main_diagram} illustrates the overall behavior across different cost scenarios.
 
 \begin{itemize}
     \item Confusion matrix (top row): Increasing $w_1$ makes the classifier progressively more sensitive to the positive class, generally lowering false negatives at the cost of higher false positives.
@@ -519,7 +519,7 @@ A Multiple-Instance Learning (MIL) model with an explicit reject option, followi
  
 To ensure statistical reliability of the empirical threshold $\tau^*$, we employ a Stratified 5-Fold Cross-Validation scheme with a Swap-Calibration strategy. In each fold, the held-out validation set is split into two disjoint subsets $\mathcal{D}_A$ and $\mathcal{D}_B$. Two independent evaluations are performed per fold: first, calibrating $\tau^*$ on $\mathcal{D}_A$ and evaluating on $\mathcal{D}_B$; second, swapping the roles by calibrating on $\mathcal{D}_B$ and evaluating on $\mathcal{D}_A$. This yields $10$ independent assessments in total, ensuring that reported safety metrics—Risk and Coverage—are computed strictly on held-out data, thereby reducing variance due to calibration.
 
-Following the above implementation and evaluation setup, experiments are organized into two clinical paradigms shown in Figure \ref{F1}. Cases 1 and 3 target general reliability by calibrating the model to satisfy a Risk Target $\alpha \in \{1\%, 3\%, 5\%, 10\%\}$. In contrast, Cases 2 and 4 emphasize sensitivity enforcing a False Negative Rate (FNR) Target with the same $\alpha$ values to reduce missed diagnoses. The workflows and comparative results of the four cases are summarized in Figure \ref{F1}.
+Following the above implementation and evaluation setup, experiments are organized into two clinical paradigms shown in Figure \ref{F1}. Cases 1 and 3 target general reliability by calibrating the model to satisfy a Risk Target $\alpha \in \{1\%, 3\%, 5\%, 10\%\}$. In contrast, Cases 2 and 4 emphasize sensitivity, enforcing a False Negative Rate (FNR) Target with the same $\alpha$ values to reduce missed diagnoses. The workflows and comparative results of the four cases are summarized in Figure \ref{F1}.
 
 \begin{figure*}[htbp]
   \centering
