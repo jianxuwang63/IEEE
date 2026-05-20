@@ -23,17 +23,18 @@
 \title{A Risk-Controlled Framework with Guaranteed Confidence for Lung Adenocarcinoma Classification}
 \author{Jianxu Wang$^{\dagger}$, Huijun Zhou$^{\dagger}$ and Xuewei Cheng
 \thanks{$^{\dagger}$ These authors contributed equally to this work.}
-\thanks{This research is supported by the Natural Science Foundation of Hunan Province 2024JJ6303, the Research Foundation of the Education Department of Hunan Province 23B0056, Hunan Phttps://www.overleaf.com/project/697c4754a4e721315d42cc78/doc/6a06e7404b019111880fe70a/downloadrovincial NSF Key Project 2025JJ30008, Hunan Furong Program High-Level Health Talent Support Project 20241226039 and High-Level Talent Support Program of Hunan Cancer Hospital 202507311010. (Corresponding author: Xuewei Cheng.)}
+\thanks{This research is supported by the Natural Science Foundation of Hunan Province 2024JJ6303, the Research Foundation of the Education Department of Hunan Province 23B0056, Hunan Provincial NSF Key Project 2025JJ30008, Hunan Furong Program High-Level Health Talent Support Project 20241226039 and High-Level Talent Support Program of Hunan Cancer Hospital 202507311010. (Corresponding author: Xuewei Cheng.)}
 \thanks{This study involved human participants and was conducted in accordance with the principles of the Declaration of Helsinki. The research protocol entitled “A Risk-Controlled Framework with Guaranteed Confidence for Lung Adenocarcinoma Classification” was reviewed and approved by the Medical Ethics Committee of Hunan Cancer Hospital (approval no. 2026 Scientific Research Expedited Review [106]) on April 22, 2026. The committee granted a final decision of “Approved” under the expedited review procedure. All procedures involving human subjects were performed in compliance with relevant institutional and national regulations.}
 \thanks{Jianxu Wang, MOE-LCSM, School of Mathematics and Statistics, Hunan Normal University. E-mail~address: 202330125008@hunnu.edu.cn.}
 \thanks{Huijun Zhou, Medical Oncology, Hunan Cancer Hospital. E-mail~address: zhouhuijun@hnca.org.}
 \thanks{Xuewei Cheng, MOE-LCSM, School of Mathematics and Statistics, Hunan Normal University; Department of Statistics, University of California, Riverside. E-mail~address: xwcheng@hunnu.edu.cn.}
+\thanks{Data will be made available on request. The code of TranSurv is publicly available at GitHub: \url{https://github.com/jianxuwang63/Risk-Controlled-Framework-codes}.}
 }
 
 \maketitle
 
 \begin{abstract}
-Accurate detection of the micropapillary (MIP) subtype in lung adenocarcinoma is clinically urgent due to its aggressive behavior and poor prognosis. Deep learning models, however, face deployment barriers from uncertainty and high false-negative rates (FNR). Although our baseline Vision Transformer reaches 93.41\% accuracy, its 16.06\% FNR is clinically unsafe. We first combine cost-sensitive learning (positive:negative = 10:1) with Neyman--Pearson-based threshold calibration to strictly bound the FNR at 5\%, achieving 85.91\% accuracy. We then introduce a selection head for instance-wise confidence and calibrate on a held-out set, yielding a selective classifier that guarantees 95\% per-instance confidence while maintaining FNR 12.91\%, attaining 94.82\% accuracy on 92.51\% of test data. Finally, integrating cost-sensitive learning directly into selective classification with FNR-based threshold selection further reduces FNR to 5.07\%, improves accuracy to 91.79\%, and achieves 91.02\% coverage---offering a practical balance of safety and throughput for clinical deployment.
+Accurate detection of the micropapillary (MIP) subtype in lung adenocarcinoma is clinically urgent due to its aggressive behavior and poor prognosis. Deep learning models, however, face deployment barriers from uncertainty and high false-negative rates (FNR). Although our baseline Vision Transformer reaches 93.41\% accuracy, its 16.06\% FNR is clinically unsafe. We first combine cost-sensitive learning (positive:negative = 10:1) with Neyman--Pearson-based threshold calibration to strictly bound the FNR at 5\%, achieving 85.91\% accuracy. We then introduce a selection head for instance-wise confidence and calibrate on a held-out set, yielding a selective classifier that guarantees 95\% per-instance confidence while maintaining FNR 12.91\%, attaining 94.82\% accuracy on 92.51\% of test data. Finally, integrating cost-sensitive learning directly into selective classification with FNR-based threshold selection further reduces FNR to 5.07\%, improves accuracy to 91.79\%, and achieves 91.02\% coverage, thereby offering a practical balance of safety and throughput for clinical deployment.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -75,7 +76,7 @@ Throughout the paper, we use lowercase letters for scalars, bold lowercase for v
 % Due to limited space, the related work is included in Appendix \ref{S6-3}.
 
 \section{Related Work}\label{S6-3}
-\textcolor{red}{Is it necessary to illustrate that cost-sensitive learning (CSL) is widely applied in research on imbalanced data? Besides, I think the content in the related work section is relatively concise. Are there any parts that need further elaboration?}
+
 Our review of related work is structured along three complementary dimensions that collectively address the core challenge of building a clinically trustworthy deep learning model for high-risk pathology detection.
 
 \subsection{DL and MIL in Computational Pathology}
@@ -95,11 +96,7 @@ A more rigorous alternative is the Neyman–Pearson (NP) framework, which treats
 Effective clinical deployment of AI requires models that know when to abstain—often termed “intellectual humility” in high-stakes settings. Selective classification provides a mechanism for this by allowing a model to reject uncertain predictions and defer them to human experts, trading coverage for higher reliability on accepted cases \cite{hendrycks2016baseline, leibig2022combining, xia2024uncertainty}. Architecturally, SelectiveNet \cite{geifman2019selectivenet, geifman2017selective} jointly trains prediction and selection heads to optimize performance on the covered subset, an approach later extended to handle distribution shifts and hierarchical rejection schemes \cite{goren2024hierarchical}.
 
 
-Conformal risk control (CRC) \cite{bates2021distribution, angelopoulos2022conformal} offers a complementary, post-hoc framework that provides distribution-free guarantees on user-defined risk metrics. CRC has been applied in medical imaging to enable reliable human-in-the-loop workflows \cite{dvijotham2023enhancing}. Inspired by CRC, we incorporate risk control and FNR control 
-into the threshold calibration of selective classification, 
-enabling SelectiveNet to simultaneously learn ambiguous input 
-representations while providing rigorous, distribution-free 
-guarantees on clinical safety bounds.
+Conformal risk control (CRC) \cite{bates2021distribution, angelopoulos2022conformal} offers a complementary, post-hoc framework that provides distribution-free guarantees on user-defined risk metrics. CRC has been applied in medical imaging to enable reliable human-in-the-loop workflows \cite{dvijotham2023enhancing}. Inspired by CRC, we integrate risk control and FNR control into threshold calibration for selective classification. This allows SelectiveNet to learn representations of ambiguous inputs, while the NP umbrella algorithm provides statistical guarantees on clinical safety bounds.
 
 \section{Methodology}\label{sec:methodology}
 
@@ -388,7 +385,7 @@ To mitigate the high false negative rate (FNR) observed in the baseline, we adop
 
 \begin{figure*}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{figures/Final_KDD_Figure.pdf} 
+    \includegraphics[width=0.85\textwidth]{figures/Final_CSL_Figure.pdf} 
     \caption{Confusion matrices and class probability densities under varying cost sensitivity.}
     \label{fig:main_diagram}
 \end{figure*}
@@ -458,7 +455,7 @@ Phase II introduces Neyman–Pearson (NP) thresholding to obtain formal, statist
     }
 \end{table}
 
-These results illustrate how Neyman–Pearson thresholding enables precise, statistically grounded control of the safety–efficiency trade‑off. Tighter miss‑risk targets shift the decision threshold downward, thereby lowering the false negative rate (FNR) at the expense of overall accuracy. Compared with cost-sensitive learning, NP can exactly control the false negative rate (FNR) at a specified level. However, it requires holding out a positive calibration set for threshold tuning, which not only reduces the number of samples in the training set but also exacerbates the class imbalance between positive and negative samples. This fully validates the no-free-lunch theorem.
+These results illustrate how Neyman–Pearson thresholding enables precise, statistically grounded control of the safety–efficiency trade‑off. Tighter miss‑risk targets shift the decision threshold downward, thereby lowering the false negative rate (FNR) at the expense of overall accuracy. Compared with cost-sensitive learning, NP can exactly control the false negative rate (FNR) at a specified level. However, it requires holding out a positive calibration set for threshold tuning, which not only reduces the number of samples in the training set but also exacerbates the class imbalance between positive and negative samples. 
 
 
 \subsection{Enhanced Phase II: Cost-Sensitive Learning Boosting Neyman–Pearson Calibration}\label{S3-4}
