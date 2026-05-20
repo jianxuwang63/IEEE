@@ -282,7 +282,7 @@ In this section, we systematically evaluate the proposed framework through a cas
 
 \subsection{Experimental Setup}\label{S3-1}
 
-We implement our framework in PyTorch and conduct all experiments on an NVIDIA RTX 5090 GPU (32 GB). The dataset comprises 7,133 locally collected pathology images with image-level labels indicating the presence ($y=1$) or absence ($y=0$) of MIP. Following common practice in computational pathology \cite{campanella2019clinical,lu2021data}, we partition each image into overlapping $512 \times 512$ tiles using a stride of 256, applying reflection padding at boundaries to ensure full coverage. Each tile is resized to $224 \times 224$ to preserve tissue-level context. To handle variable bag sizes in mini-batches, we employ zero-padding with an attention mask that excludes padded regions from gradient updates. All tiles are normalized using ImageNet statistics\cite{russakovsky2015imagenet}. During training, we apply strong data augmentation via Albumentations \cite{buslaev2020albumentations}, including random flips, moderate rotations, and color jitter.
+We implement our framework in PyTorch and conduct all experiments on an NVIDIA RTX 5090 GPU (32 GB). The dataset comprises 7,133 locally collected pathology images with image-level labels indicating the presence ($y=1$) or absence ($y=0$) of MIP. Following common practice in computational pathology \cite{campanella2019clinical,lu2021data}, we partition each image into overlapping $512 \times 512$ tiles using a stride of 256, applying reflection padding at boundaries to ensure full coverage. Each tile is resized to $224 \times 224$ to preserve tissue-level context. To handle variable bag sizes in mini-batches, we employ zero-padding with an attention mask that excludes padded regions from gradient updates. All tiles are normalized using ImageNet statistics \cite{russakovsky2015imagenet}. During training, we apply strong data augmentation via Albumentations \cite{buslaev2020albumentations}, including random flips, moderate rotations, and color jitter.
 
 We initialize the ViT-based MIL baseline with Phikon weights \cite{filiot2023scaling} and adopt gated attention pooling \cite{ilse2018attention}. The dataset is split into 80\% training and 20\% test using stratified sampling. All models are optimized with the same protocol: AdamW \cite{loshchilov2017decoupled} (learning rate $10^{-5}$, weight decay $0.05$) for 15 epochs, a cosine schedule with 10\% linear warmup \cite{loshchilov2016sgdr}, mixed precision, and gradient accumulation (batch size 8, accumulation steps 4). Regularization includes dropout of 0.2 and label smoothing of 0.1 \cite{szegedy2016rethinking}. To ensure stable and reproducible evaluation, we fix random seeds and enable deterministic cuDNN. Unless stated otherwise, results are reported using the final training checkpoint with a default decision threshold of $\tau = 0.5$.
 
@@ -676,9 +676,9 @@ We externally validated our models on the TRACERx 100 clinical cohort (\url{http
         \midrule
         \multicolumn{5}{c}{Cost-Sensitive ($w_{1}=5$)} \\
         \midrule
-        NP (1\%) & 35.49\% & $92.49\% & $0.67\% & $72.63\% \\
-        NP (5\%) & 69.05\% & $92.49\% & $6.53\% & $34.05\% \\
-        NP (10\%) & 79.41\% & $92.49\% & $12.00\% & $21.68\% \\
+        NP (1\%) & 35.49\% & 92.49\% & 0.67\% & 72.63\% \\
+        NP (5\%) & 69.05\% & 92.49\% & 6.53\% & 34.05\% \\
+        NP (10\%) & 79.41\% & 92.49\% & 12.00\% & 21.68\% \\
         \bottomrule
     \end{tabular}
     }
