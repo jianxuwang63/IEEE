@@ -81,7 +81,7 @@ Our review of related work is structured along three complementary dimensions th
 
 \subsection{DL and MIL in Computational Pathology}
 
-Deep learning has reshaped computational pathology by enabling automated analysis of whole-slide images (WSIs) \cite{coudray2018classification, campanella2019clinical}. Due to their gigapixel scale, WSIs are typically processed using multiple instance learning (MIL), which aggregates tile-level features into slide-level predictions without requiring fine-grained annotations.  Early MIL methods relied on attention mechanisms to highlight diagnostically relevant regions \cite{ilse2018attention}, and later frameworks such as CLAM introduced regularization on attention scores to improve sample efficiency \cite{lu2021data}. Recent advances have shifted from convolutional backbones to vision transformers (ViTs) and self-supervised pre-training. Large-scale histology-specific foundation models—for example, Phikon \cite{filiot2023scaling}, pre-trained via masked image modeling—now deliver substantially stronger feature representations than generic ImageNet initialization. Our method builds directly on such state-of-the-art visual encoders.
+Deep learning has reshaped computational pathology by enabling automated analysis of whole-slide images (WSIs) \cite{coudray2018classification, campanella2019clinical}. Due to their gigapixel scale, WSIs are typically processed using multiple instance learning (MIL), which aggregates tile-level features into slide-level predictions without requiring fine-grained annotations. Early MIL methods relied on attention mechanisms to highlight diagnostically relevant regions \cite{ilse2018attention}, and later frameworks such as CLAM introduced regularization on attention scores to improve sample efficiency \cite{lu2021data}. Recent advances have shifted from convolutional backbones to vision transformers (ViTs) and self-supervised pre-training. Large-scale histology-specific foundation models—for example, Phikon \cite{filiot2023scaling}, pre-trained via masked image modeling—now deliver substantially stronger feature representations than generic ImageNet initialization. Our method builds directly on such state-of-the-art visual encoders.
 
 Nevertheless, most existing MIL approaches are optimized for average performance metrics such as AUC, largely ignoring the clinically asymmetric cost of errors. This is particularly critical in high-risk settings such as micropapillary (MIP) lung adenocarcinoma, where false negatives entail severe prognostic consequences \cite{caso2020underlying, dai2017tumor, zahari2024mitigating}.
 
@@ -550,7 +550,7 @@ Table~\ref{tab:table5} demonstrates the trade-off between reliability (risk) and
 
 While the conditional risk is successfully bounded in Case~1, the False Negative Rate (FNR) increases monotonically with the risk target—rising from 1.25\% at $\alpha=1\%$ to 20.54\% at $\alpha=10\%$. This reveals a key limitation of standard selective risk control: optimizing for overall accuracy does not explicitly prevent the rejection or misclassification of positive samples. To address this, we introduce FNR-targeted control (Case~2) and cost-sensitive learning (Cases~3 and 4).
 
-\subsubsection{\textbf{Case 2: Selective classification with FNR Control}}
+\subsubsection{\textbf{Case 2: Selective Classification with FNR Control}}
 \label{sec:case2_results}
 
 In Case 2, the calibration objective shifts from conditional risk to explicit control of the False Negative Rate (FNR). The aim is to strictly bound the probability of misclassifying a positive sample within the accepted subset. The threshold $\tau_2^*$ is selected as the infimum confidence score satisfying the empirical FNR control $\widehat{\mathrm{FNR}}(\tau) \le \alpha$. This strategy maximizes coverage while strictly enforcing the specified safety limit on missed positives.
@@ -676,9 +676,9 @@ We externally validated our models on the TRACERx 100 clinical cohort (\url{http
         \midrule
         \multicolumn{5}{c}{Cost-Sensitive ($w_{1}=5$)} \\
         \midrule
-        NP (1\%) & $35.49\%$ & $92.49\%$ & $0.67\%$ & $72.63\%$ \\
-        NP (5\%) & $69.05\%$ & $92.49\%$ & $6.53\%$ & $34.05\%$ \\
-        NP (10\%) & $79.41\%$ & $92.49\%$ & $12.00\%$ & $21.68\%$ \\
+        NP (1\%) & 35.49\% & $92.49\% & $0.67\% & $72.63\% \\
+        NP (5\%) & 69.05\% & $92.49\% & $6.53\% & $34.05\% \\
+        NP (10\%) & 79.41\% & $92.49\% & $12.00\% & $21.68\% \\
         \bottomrule
     \end{tabular}
     }
@@ -717,7 +717,7 @@ We further evaluated the selective inference framework on the external dataset a
 
 In this work, we present a risk-controlled framework for MIP subtype detection in lung adenocarcinoma that systematically resolves the trade-off between diagnostic safety and throughput. Cost-sensitive learning reshapes the decision boundary by upweighting false-negative penalties, thereby boosting intrinsic model sensitivity prior to any threshold adjustment. Building on this shifted score distribution, Neyman--Pearson calibration translates the improved separability into a rigorous statistical guarantee that the false-negative rate remains below a clinically specified level, demonstrating that the two components are mutually reinforcing rather than independent. Selective classification further consolidates reliability by allowing the model to abstain on uncertain inputs, restricting automated decisions to a high-confidence subset while deferring ambiguous cases to pathologists. Together, these three phases achieve a principled balance between safety and efficiency, offering a deployable pathway toward trustworthy clinical decision support in high-stakes pathological diagnosis.
 
-However, several issues merit further investigation. First, while the NP umbrella method can control the overall FNR at a specified level, which is an algorithm and data independent guarantee, it requires a separate set of positive validation samples. In clinical practice, positive samples are often the minority class, which can exacerbate training difficulty and compromise predictive accuracy. Second, although selective classification provides a theoretical lower bound on the risk–coverage tradeoff, controlling overall risk does not necessarily guarantee control of the FNR. Although cost-sensitive learning (Case 2 in Section \ref{sec:phase3_method}) empirically reduces the FNR, its theoretical assurance remains an open question for future work.
+However, several issues merit further investigation. First, while the NP umbrella method can control the overall FNR at a specified level, which is an algorithm and data independent guarantee, it requires a separate set of positive validation samples. In clinical practice, positive samples are often the minority class, which can exacerbate training difficulty and compromise predictive accuracy. Second, although selective classification provides a theoretical lower bound on the risk–coverage tradeoff, controlling overall risk does not necessarily guarantee control of the FNR. \textcolor{red}{Although cost-sensitive learning (Case 2 in Section \ref{sec:phase3_method}) empirically reduces the FNR, its theoretical assurance remains an open question for future work.}\textcolor{blue}{There is an error in this statement, since Case 2 does not involve cost-sensitive learning (CSL).}
 
 
 \section*{References}
